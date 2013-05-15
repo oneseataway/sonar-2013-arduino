@@ -28,7 +28,8 @@
 //------------------------------------------------------------------------
 //  Properties
 //------------------------------------------------------------------------
-int MESSAGE[4] = { 2,4,7,12 };
+//  pins 0, 1, *4*, 10, 11, *12*, 13 must not be used by your code
+int MESSAGE[5] = { 0, 2, 5, 7, 8 };
 
 // buffer should be long enough to hold the desired values
 // as well as the starter marker
@@ -98,13 +99,44 @@ void loop() {
       finder.find("\n\r\n");
     }
     
+     /*
      if (requestMethod.equals("GET") && requestUri.equals("/")) 
      {
-        sendResponse(client, 10);
+        Serial.println("Received GET /");
+        byte sound[5] = { 'M', 1,0,1,0 };
+        sendResponse(client, sound);
      }
      else if (requestMethod.equals("GET") && requestUri.equals("/test")) 
      {
-        sendResponse(client, 5);
+       Serial.println("Received GET /test"); 
+       
+       byte sound[5] = { 'M',0,1,1,1 };
+       sendResponse(client, sound);
+     }
+     else if (requestMethod.equals("GET") && requestUri.equals("/off")) 
+     {
+       Serial.println("Received GET /test"); 
+       
+       byte sound[5] = { 'M',0,0,0,0 };
+       sendResponse(client, sound);
+     }
+     else 
+     */
+     if (requestMethod.equals("GET")) 
+     {
+       Serial.print("Received GET ");
+       Serial.println(requestUri);
+
+       byte sound[5] = { 'M',0,0,0,0 };
+       
+       if (!requestUri.equals(""))
+       {
+         for(int i=1; i<5; i++) {
+            sound[i] = byte(requestUri.charAt(i+1)-48);
+          }
+       }
+       
+       sendResponse(client, sound);
      }
      
   }
@@ -131,7 +163,7 @@ void nightProgram() {
 // Yaler request functions
 //------------------------------------------------------------------------
 
-void sendResponse(EthernetClient client, int parameter) 
+void sendResponse(EthernetClient client, byte parameter[]) 
 {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
@@ -141,25 +173,46 @@ void sendResponse(EthernetClient client, int parameter)
    //------------------------------------------------------------
    // TODO
    //------------------------------------------------------------
-   
-    switch( byte(parameter) ) {
-      
-      case 'M': //starter marker
-        buff[0] = parameter;
-        for(int i=1; i<5; i++) buff[i] = parameter-i;
 
+  switch( byte(parameter[0]) ) 
+  {
+      case 'M': //starter marker
+        Serial.println("case M");
+        buff[0] = parameter[0];
+
+        for(int i=1; i<5; i++) {
+          Serial.print(i);
+          Serial.print(" - ");
+          Serial.println(parameter[i]);
+          buff[i] = parameter[i];
+        }
+        
       break;
-    }
+  }
  
   
     /*
      *  Output
      */
-    for(int i=0; i<4; i++) {
-      if(buff[i] == 0) digitalWrite( MESSAGE[i], LOW );
-      else if(buff[i] == 1) digitalWrite( MESSAGE[i], HIGH );
+    Serial.println("Output");
+    for(int i=1; i<5; i++) 
+    { 
+      Serial.print(i);
+      Serial.print(" - ");
+      Serial.println(buff[i]);
+      if(buff[i] == 0) {
+        digitalWrite( MESSAGE[i], HIGH );
+        Serial.print(MESSAGE[i]);
+        Serial.println(" sensor LOW");
+      }
+      else if(buff[i] == 1) {
+        digitalWrite( MESSAGE[i], LOW );
+        Serial.print(MESSAGE[i]);
+        Serial.println(" sensor HIGH");
+      }
     }
-   
+
+    Serial.println("Done");   
    //------------------------------------------------------------
    // TODO
    //------------------------------------------------------------
