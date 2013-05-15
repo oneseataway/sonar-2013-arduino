@@ -54,7 +54,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Acquiring IP address...");
   
-  for(int i=0; i<4; i++) pinMode(MESSAGE[i], OUTPUT);     
+  for(int i=1; i<5; i++) pinMode(MESSAGE[i], OUTPUT);     
   
   // Yaler stuff
   if (Ethernet.begin(mac) == 0) {
