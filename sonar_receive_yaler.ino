@@ -127,16 +127,23 @@ void loop() {
        Serial.print("Received GET ");
        Serial.println(requestUri);
 
+       byte res = 0;
        byte sound[5] = { 'M',0,0,0,0 };
        
        if (!requestUri.equals(""))
        {
          for(int i=1; i<5; i++) {
-            sound[i] = byte(requestUri.charAt(i+1)-48);
+            res = byte(requestUri.charAt(i+1)-48);
+            if (res > 1 || res < 0) res = 0;
+            sound[i] = res;
           }
        }
        
        sendResponse(client, sound);
+       
+       client.flush();
+       delay(1); // give the web browser time to receive the data
+
      }
      
   }
@@ -144,6 +151,8 @@ void loop() {
   {
     Serial.println("Error with the connection");
     Serial.println("disconnecting.");
+    
+    delay(1); // give the web browser time to receive the data
     client.stop();
   }
   
