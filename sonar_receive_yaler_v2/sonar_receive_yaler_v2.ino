@@ -1,5 +1,5 @@
 /*
- *  Sonar Receive Test
+ *  Sonar 2013 - OneSeatAway
  * 
  *  Ken Frederick
  *  ken.frederick@gmx.de
@@ -7,7 +7,13 @@
  *  http://cargocollective.com/kenfrederick/
  *  http://kenfrederick.blogspot.com/
  *
- *  receive messages from processing
+ *  Marc Pous
+ *  marc.pous@gmail.com
+ *  
+ *  http://marcpous.com
+ *  http://thethings.io
+ *
+ *  receive messages from MAX/MSP and send them to Yaler
  * 
  */
 
@@ -37,18 +43,10 @@ MultiTimer mtimer;
 //Timer timer;
 
 // Yaler stuff
-
 char endOfHeaders[] = "\r\n\r\n";
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEF }; // CHANGE THIS IF YOU'VE GOT MORE THAN ONE Arduino
 YalerEthernetServer server("try.yaler.net", 80, "gsiot-ypf7-s06d");
 
-long r1;
-long r2;
-long r3;
-long r4;
-
-String requestUri;
-String arg;
 
 //------------------------------------------------------------------------
 //  Methods
@@ -103,17 +101,12 @@ void loop() {
       contentLength = finder.getValue();
       finder.find("\n\r\n");
     }
-  
-  
-  
-  
+
    if (requestMethod.equals("GET") && !requestUri.equals(""))
    {
-     Serial.print("Received GET ");
-     Serial.println(requestUri);
-     
      convertStringToByteArray(requestUri);
-     
+    
+     // printing the byte array 
      for(int i=0; i<8; i++) 
      {
           Serial.print(i);
@@ -122,60 +115,28 @@ void loop() {
      } 
      
      //sendResponse(client, data);
-       
-     client.flush();
-     delay(1); // give the web browser time to receive the data
-
    }
-
-   
 
   }
   else
   {
-    
+    Serial.println("ERROR: Not connected");
   }
-  
+        
+  client.flush();
+  delay(1); // give the web browser time to receive the data
 
 }
 
 
 //------------------------------------------------------------------------
-void nightProgram() {
 
 
-
-}
-
-void convertStringToByteArray(String str)
-{
-  int numArgs = 0;
-  char charBuffer[16];
-  int beginIdx = 1;
-  
-  Serial.println("......................");
-  Serial.println(str);
-  
-  int idx = str.indexOf("-");
-
-   while (idx != -1)
-   {
-    arg = str.substring(beginIdx, idx);
-    Serial.println(arg);
-    arg.toCharArray(charBuffer, 16);
-  
-   // add error handling for atoi:
-    data[numArgs++] = (byte) atoi(charBuffer);
-    beginIdx = idx + 1;
-    idx = str.indexOf("-", beginIdx);
-   }
-   
-   Serial.println(str.substring(beginIdx));
-   data[numArgs++] = (byte) str.substring(beginIdx).toInt();
-}
 
 //------------------------------------------------------------------------
 // Yaler request functions
+// Date: 20 / 5 / 2013
+// Author: Marc Pous
 //------------------------------------------------------------------------
 
 void sendResponse(EthernetClient client, byte parameter[]) 
@@ -184,10 +145,6 @@ void sendResponse(EthernetClient client, byte parameter[])
   client.println("Content-Type: text/html");
   client.println();
   client.println("<h1>One chair away</h1>");
-  
-   //------------------------------------------------------------
-   // TODO
-   //------------------------------------------------------------
 
   switch( byte(parameter[0]) ) 
   {
@@ -207,7 +164,7 @@ void sendResponse(EthernetClient client, byte parameter[])
  
   
     /*
-     *  Output
+     *  Output signal
      */
     Serial.println("Output");
     for(int i=1; i<5; i++) 
@@ -227,11 +184,38 @@ void sendResponse(EthernetClient client, byte parameter[])
       }
     }
 
-    Serial.println("Done");   
-   //------------------------------------------------------------
-   // TODO
-   //------------------------------------------------------------
-  
-  
+    Serial.println("Done");  
+
 }
 
+
+//------------------------------------------------------------------------
+// Converting requestUri string into Byte Array
+// Date: 20 / 5 / 2013
+// Author: Marc Pous
+//------------------------------------------------------------------------
+
+void convertStringToByteArray(String str)
+{
+  int numArgs = 0;
+  char charBuffer[16];
+  int beginIdx = 1;
+  
+  String arg;
+  
+  int idx = str.indexOf("-");
+
+   while (idx != -1)
+   {
+    arg = str.substring(beginIdx, idx);
+    Serial.println(arg);
+    arg.toCharArray(charBuffer, 16);
+  
+   // add error handling for atoi:
+    data[numArgs++] = (byte) atoi(charBuffer);
+    beginIdx = idx + 1;
+    idx = str.indexOf("-", beginIdx);
+   }
+
+   data[numArgs++] = (byte) str.substring(beginIdx).toInt();
+}
