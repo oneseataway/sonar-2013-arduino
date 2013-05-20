@@ -146,38 +146,39 @@ void sendResponse(EthernetClient client, byte parameter[])
   client.println();
   client.println("<h1>One chair away</h1>");
 
-  switch( byte(parameter[0]) ) 
+  
+  Serial.println("Processing the signal");
+  /*
+  for(int i=0; i<8; i++) 
   {
-      case 'M': //starter marker
-        Serial.println("case M");
-        buff[0] = parameter[0];
-
-        for(int i=1; i<5; i++) {
-          Serial.print(i);
-          Serial.print(" - ");
-          Serial.println(parameter[i]);
-          buff[i] = parameter[i];
-        }
-        
-      break;
+    Serial.print(i);
+    Serial.print(" - ");
+    Serial.println(parameter[i]);
+    buff[i] = parameter[i];
   }
- 
+  */
   
     /*
      *  Output signal
      */
     Serial.println("Output");
-    for(int i=1; i<5; i++) 
+    for(int i=0; i<8; i++) 
     { 
       Serial.print(i);
       Serial.print(" - ");
       Serial.println(buff[i]);
-      if(buff[i] == 0) {
+      
+      // TODO @Simo
+      // Apply PWM here!
+
+      if(buff[i] == 0) 
+      {
         digitalWrite( MESSAGE[i], HIGH );
         Serial.print(MESSAGE[i]);
         Serial.println(" sensor LOW");
       }
-      else if(buff[i] == 1) {
+      else if(buff[i] == 1) 
+      {
         digitalWrite( MESSAGE[i], LOW );
         Serial.print(MESSAGE[i]);
         Serial.println(" sensor HIGH");
