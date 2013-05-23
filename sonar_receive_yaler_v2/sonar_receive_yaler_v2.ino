@@ -114,7 +114,7 @@ void loop() {
           Serial.println(data[i]);
      } 
      
-     //sendResponse(client, data);
+     sendResponse(client, data);
    }
 
   }
@@ -139,7 +139,7 @@ void loop() {
 // Author: Marc Pous
 //------------------------------------------------------------------------
 
-void sendResponse(EthernetClient client, byte parameter[]) 
+void sendResponse(EthernetClient client, byte buff[]) 
 {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
