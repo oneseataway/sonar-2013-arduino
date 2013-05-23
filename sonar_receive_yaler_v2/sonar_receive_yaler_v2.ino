@@ -35,7 +35,7 @@
 //  Properties
 //------------------------------------------------------------------------
 //  pins 0, 1, *4*, 10, 11, *12*, 13 must not be used by your code
-int MESSAGE[5] = { 2, 5, 7, 8 };
+int MESSAGE[5] = { 3, 5, 6, 9 };
 byte buff[8];
 byte data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -114,7 +114,7 @@ void loop() {
           Serial.println(data[i]);
      } 
      
-     //sendResponse(client, data);
+     sendResponse(client, data);
    }
 
   }
@@ -139,7 +139,7 @@ void loop() {
 // Author: Marc Pous
 //------------------------------------------------------------------------
 
-void sendResponse(EthernetClient client, byte parameter[]) 
+void sendResponse(EthernetClient client, byte buff[]) 
 {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
@@ -148,15 +148,15 @@ void sendResponse(EthernetClient client, byte parameter[])
 
   
   Serial.println("Processing the signal");
-  /*
-  for(int i=0; i<8; i++) 
-  {
-    Serial.print(i);
-    Serial.print(" - ");
-    Serial.println(parameter[i]);
-    buff[i] = parameter[i];
-  }
-  */
+  
+//  for(int i=0; i<8; i++) 
+//  {
+//    Serial.print(i);
+//    Serial.print(" - ");
+//    Serial.println(parameter[i]);
+//    buff[i] = parameter[i];
+//  }
+// 
   
     /*
      *  Output signal
@@ -170,16 +170,17 @@ void sendResponse(EthernetClient client, byte parameter[])
       
       // TODO @Simo
       // Apply PWM here!
+      //analogWrite( MESSAGE[i], buff[i] );
 
-      if(buff[i] == 0) 
+      if(buff[i] <100) 
       {
-        digitalWrite( MESSAGE[i], HIGH );
+        analogWrite( MESSAGE[i], HIGH );
         Serial.print(MESSAGE[i]);
         Serial.println(" sensor LOW");
       }
-      else if(buff[i] == 1) 
+      else 
       {
-        digitalWrite( MESSAGE[i], LOW );
+        analogWrite( MESSAGE[i], buff[i] );
         Serial.print(MESSAGE[i]);
         Serial.println(" sensor HIGH");
       }
