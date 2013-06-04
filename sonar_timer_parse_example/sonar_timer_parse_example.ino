@@ -46,8 +46,8 @@ Timer timer[2];
 // repeat...
 //
 String FROM_MAX[2] = {
-  "#%1%500#%2%1000#%3%1500#%4%2000#%5%2500",  // motor 1
-  "#%1%2500#%2%2000#%3%1500#%4%1000#%5%500"   // motor 2
+  "$6#%1%500#%2%1000#%3%1500#%4%2000#%5%2500#%3%3000",  // motor 1
+  "$9#%1%2500#%2%2000#%3%1500#%4%1000#%5%500#%4%1000#%3%1500#%2%2000#%1%2500"   // motor 2
   // and so on...
 };
 
@@ -61,6 +61,9 @@ String FROM_MAX[2] = {
 String COMP[2];
 // the component index to be read
 int COMP_INDEX[2] = { 1,1 };
+
+// the size of the packet (i.e. the number of different rhythms)
+int COMP_SIZE[2] = { 6,9 };
 
 // this is a holder for the motor strength
 // the array length should match the number of motors
@@ -83,6 +86,14 @@ void setup() {
      *  setup output pins for vibration motors
      */
     pinMode(VMOTORS[i], OUTPUT);     
+
+
+    // check for the comp packet size
+    // on initialization
+    String compSizeStr = split( FROM_MAX[i], '$', 1 );
+    Serial.println( compSizeStr );
+    COMP_SIZE[i] = compSizeStr.toInt();
+    Serial.println( COMP_SIZE[i] );
 
 
     /*
@@ -123,14 +134,23 @@ void loop() {
       COMP_INDEX[i]++;
       // if the COMP_INDEX is greater than
       // the number of components, reset back to 1
-      if( COMP_INDEX[i] > 5 ) {
-        // in this example we just reset the 
+      if( COMP_INDEX[i] > COMP_SIZE[i] ) {
+        // in this example we jsut reset the 
         // index value so it loops
         COMP_INDEX[i] = 1;
         
         // this is where you might add the code to
         // check for a new packet
         // checkServer()
+        
+        // if we were getting a new packet
+        // this is where we sould check for 
+        // the size of the new packet
+        Serial.println( i + ": RESET " + COMP_SIZE[i] );
+//        String compSizeStr = split( FROM_MAX[i], '$', 1 );
+//        Serial.println( compSizeStr );
+//        COMP_SIZE[i] = compSizeStr.toInt();
+//        Serial.println( i + ": NEW PACKET SIZE: " + COMP_SIZE[i] );
       }
 
 
