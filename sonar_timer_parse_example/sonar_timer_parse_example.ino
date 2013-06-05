@@ -51,18 +51,18 @@ Timer timer[ NUM_MOTORS ];
 // a max packet has to be made of the following
 // this represents a "500ms" block of values being transmitted
 //
-// ^1   = which motor marker (a number 0-3) -- not used in this example
 // $5   = packet size
-// #1   = component marker
+// _1   = component marker
 // |1   = value of motor strength (a number 1-5)
 // |100 = value of time interval
 // repeat...
 //
 String FROM_MAX[ NUM_MOTORS ] = {
-  "$18#|0|500#|1|500#|0|500#|5|500#|1|500#|0|500#|5|500#|1|500#|0|500#|0|500#|1|500#|0|500#|5|500#|1|500#|0|500#|5|500#|1|500#|0|500",   // motor 1
-  "$3#|5|500#|3|1500#|0|2500",   // motor 4
-  "$9#|0|500#|1|500#|0|500#|5|500#|1|500#|0|500#|5|500#|1|500#|0|500",   // motor 3
-  "$3#|5|500#|3|1500#|0|2500"   // motor 4
+  "$3$_|5|500_|3|1500_|0|2500",
+  "$9$_|0|500_|1|500_|0|500_|5|500_|1|500_|0|500_|5|500_|1|500_|0|500",
+  "$3$_|0|500_|5|1500_|0|2500",
+  "$2$_|0|1000_|2|1000",
+//  "$18$_|0|50_|5|1000_|0|50_|5|2500_|5|100_|0|50_|5|100_|0|50_|5|100_|0|50_|5|100_|0|50_|5|100_|1|100_|2|250_|4|500_|5|500_|5|50"
 };
 
 
@@ -70,14 +70,14 @@ String FROM_MAX[ NUM_MOTORS ] = {
  *  Max Packet Handling
  */
 // this is a holder for a component of
-// the string from max ie( "#1|100" )
+// the string from max ie( "_1|100" )
 // the array length should match the number of motors
 String COMP[ NUM_MOTORS ];
 // the component index to be read
 int COMP_INDEX[ NUM_MOTORS ] = { 1,1,1,1 };
 
 // the size of the packet (i.e. the number of different rhythms)
-int COMP_SIZE[ NUM_MOTORS ] = { 18,3,9,3 };
+int COMP_SIZE[ NUM_MOTORS ] = { 1,1,1,1 };
 
 // this is a holder for the motor strength
 // the array length should match the number of motors
@@ -105,9 +105,7 @@ void setup() {
     // check for the comp packet size
     // on initialization
     String compSizeStr = split( FROM_MAX[i], '$', 1 );
-//    Serial.println( compSizeStr );
     COMP_SIZE[i] = compSizeStr.toInt();
-//    Serial.println( COMP_SIZE[i] );
 
 
     /*
@@ -133,7 +131,7 @@ void loop() {
    *  read volume value
    */
   VOLUME = analogRead( VOLUME_PIN );
-  float volumePct = (float)(map(VOLUME, 0,1023, 0,100)*0.01);
+  float volumePct = (float)(map(VOLUME, 0,1023, 50,100)*0.01);
   
   
 
@@ -178,22 +176,23 @@ void loop() {
         // if we were getting a new packet
         // this is where we sould check for 
         // the size of the new packet
-//        Serial.println( i + ": RESET " + COMP_SIZE[i] );
-//        String compSizeStr = split( FROM_MAX[i], '$', 1 );
-//        Serial.println( compSizeStr );
-//        COMP_SIZE[i] = compSizeStr.toInt();
-//        Serial.println( i + ": NEW PACKET SIZE: " + COMP_SIZE[i] );
+        String compSizeStr = split( FROM_MAX[i], '$', 1 );
+        COMP_SIZE[i] = compSizeStr.toInt();
+        Serial.println( i + ": NEW PACKET SIZE: " + COMP_SIZE[i] );
       }
 
 
       // get COMP
-      // split on the '#'
-      COMP[i] = split( FROM_MAX[i], '#', COMP_INDEX[i] );     
+      // split on the '_'
+      COMP[i] = split( FROM_MAX[i], '_', COMP_INDEX[i] );     
 
       // update motor strength
       // split on the '|' (the first one)
       String strengthStr = split( COMP[i], '|', 1 );
       STRENGTH[i] = (int)(map(strengthStr.toInt(), 0,5, 0,255));
+      STRENGTH[i] = ( STRENGTH[i] <= 150 && STRENGTH[i] >= 1 ) 
+                      ? 150
+                      : STRENGTH[i];
  
       // update interval value
       // split on the '|' (the second one)
