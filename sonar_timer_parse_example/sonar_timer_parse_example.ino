@@ -21,15 +21,28 @@
 
 
 //------------------------------------------------------------------------
+//  Definitions
+//------------------------------------------------------------------------
+#define NUM_MOTORS 4
+
+
+
+//------------------------------------------------------------------------
 //  Properties
 //------------------------------------------------------------------------
 // the output pins for the motors
 // 11 = PWM
+// 10 = PWM
 // 9  = PWM
-int VMOTORS[2] = { 11,9 };
+// 6  = PWM
+int VMOTORS[ NUM_MOTORS ] = { 11, 10, 9, 6 };
+
+// this is a holder for the volume
+int VOLUME = 0;
+int VOLUME_PIN = A0;
 
 // the timer (should match the number of motors)
-Timer timer[2];
+Timer timer[ NUM_MOTORS ];
 
 
 /*
@@ -41,14 +54,15 @@ Timer timer[2];
 // ^1   = which motor marker (a number 0-3) -- not used in this example
 // $5   = packet size
 // #1   = component marker
-// %1   = value of motor strength (a number 1-5)
-// %100 = value of time interval
+// |1   = value of motor strength (a number 1-5)
+// |100 = value of time interval
 // repeat...
 //
-String FROM_MAX[2] = {
-  "$6#%1%500#%2%1000#%3%1500#%4%2000#%5%2500#%3%3000",  // motor 1
-  "$9#%1%2500#%2%2000#%3%1500#%4%1000#%5%500#%4%1000#%3%1500#%2%2000#%1%2500"   // motor 2
-  // and so on...
+String FROM_MAX[ NUM_MOTORS ] = {
+  "$18#|0|500#|1|500#|0|500#|5|500#|1|500#|0|500#|5|500#|1|500#|0|500#|0|500#|1|500#|0|500#|5|500#|1|500#|0|500#|5|500#|1|500#|0|500",   // motor 1
+  "$3#|5|500#|3|1500#|0|2500",   // motor 4
+  "$9#|0|500#|1|500#|0|500#|5|500#|1|500#|0|500#|5|500#|1|500#|0|500",   // motor 3
+  "$3#|5|500#|3|1500#|0|2500"   // motor 4
 };
 
 
@@ -56,22 +70,22 @@ String FROM_MAX[2] = {
  *  Max Packet Handling
  */
 // this is a holder for a component of
-// the string from max ie( "#1%100" )
+// the string from max ie( "#1|100" )
 // the array length should match the number of motors
-String COMP[2];
+String COMP[ NUM_MOTORS ];
 // the component index to be read
-int COMP_INDEX[2] = { 1,1 };
+int COMP_INDEX[ NUM_MOTORS ] = { 1,1,1,1 };
 
 // the size of the packet (i.e. the number of different rhythms)
-int COMP_SIZE[2] = { 6,9 };
+int COMP_SIZE[ NUM_MOTORS ] = { 18,3,9,3 };
 
 // this is a holder for the motor strength
 // the array length should match the number of motors
-int STRENGTH[2] = { 0,0 };
+int STRENGTH[ NUM_MOTORS ] = { 255,255,255,255 };
 
 // this is a holder for time interval
 // the array length should match the number of motors
-float INTERVAL[2] = { 500,2500 };
+float INTERVAL[ NUM_MOTORS ] = { 500,500,500,500 };
 
 
 
@@ -80,8 +94,8 @@ float INTERVAL[2] = { 500,2500 };
 //------------------------------------------------------------------------
 void setup() {                
   Serial.begin(9600);
-
-  for( int i=0; i<2; i++) {
+  
+  for( int i=0; i<NUM_MOTORS; i++) {
     /*
      *  setup output pins for vibration motors
      */
@@ -91,9 +105,9 @@ void setup() {
     // check for the comp packet size
     // on initialization
     String compSizeStr = split( FROM_MAX[i], '$', 1 );
-    Serial.println( compSizeStr );
+//    Serial.println( compSizeStr );
     COMP_SIZE[i] = compSizeStr.toInt();
-    Serial.println( COMP_SIZE[i] );
+//    Serial.println( COMP_SIZE[i] );
 
 
     /*
@@ -103,14 +117,30 @@ void setup() {
   }
 
 
+  /*
+   *  setup volume pin
+   */
+//  pinMode( VOLUME_PIN, INPUT );
+
+
 
 }
 
 //------------------------------------------------------------------------
 void loop() {
   
-//    int i = 1;  
-  for( int i=0; i<2; i++) {
+  /*
+   *  read volume value
+   */
+  VOLUME = analogRead( VOLUME_PIN );
+  float volumePct = (float)(map(VOLUME, 0,1023, 0,100)*0.01);
+  
+  
+
+  /*
+   *  loop through all of the motors
+   */
+  for( int i=0; i<NUM_MOTORS; i++) {
       
      /*
       *  this configuration will turn off
@@ -118,10 +148,12 @@ void loop() {
       *  and keep the motor ON for the
       *  length set in the interval
       */
+    analogWrite( VMOTORS[i], STRENGTH[i]*volumePct );
+
     if( !timer[i].getTrigger() ) {
       
 //        if( timer[i].getTriggerNum() == 0 ) {
-        analogWrite(VMOTORS[i], STRENGTH[i]);
+//        analogWrite(VMOTORS[i], STRENGTH[i]);
 //        } 
 //        else {
 //          analogWrite(VMOTORS[i], 10);
@@ -146,7 +178,7 @@ void loop() {
         // if we were getting a new packet
         // this is where we sould check for 
         // the size of the new packet
-        Serial.println( i + ": RESET " + COMP_SIZE[i] );
+//        Serial.println( i + ": RESET " + COMP_SIZE[i] );
 //        String compSizeStr = split( FROM_MAX[i], '$', 1 );
 //        Serial.println( compSizeStr );
 //        COMP_SIZE[i] = compSizeStr.toInt();
@@ -159,13 +191,13 @@ void loop() {
       COMP[i] = split( FROM_MAX[i], '#', COMP_INDEX[i] );     
 
       // update motor strength
-      // split on the '%' (the first one)
-      String strengthStr = split( COMP[i], '%', 1 );
-      STRENGTH[i] = (int)((strengthStr.toInt()*0.1)*255);
+      // split on the '|' (the first one)
+      String strengthStr = split( COMP[i], '|', 1 );
+      STRENGTH[i] = (int)(map(strengthStr.toInt(), 0,5, 0,255));
  
       // update interval value
-      // split on the '%' (the second one)
-      String intervalStr = split( COMP[i], '%', 2 );
+      // split on the '|' (the second one)
+      String intervalStr = split( COMP[i], '|', 2 );
       INTERVAL[i] = intervalStr.toInt();
 
       // set Timer with new interval

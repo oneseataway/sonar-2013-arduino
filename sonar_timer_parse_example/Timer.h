@@ -118,7 +118,7 @@ bool Timer::getTrigger() {
 //  Serial.print( freq );
 //  Serial.print( " --- " );
 //  Serial.print( index );
-  Serial.print( " --- " );
+//  Serial.print( " --- " );
 //  Serial.println( index % 2 );
 
   if( (millis() - startTime) < freq ) {
